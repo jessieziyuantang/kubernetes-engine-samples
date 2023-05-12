@@ -12,7 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 FROM php:7.4-apache-buster
-RUN apt update && apt -y install zip unzip git-all
+RUN apt update && apt -y install zip unzip git-all && \
+echo 'deb http://apt.newrelic.com/debian/ newrelic non-free' | sudo tee /etc/apt/sources.list.d/newrelic.list && \
+wget -O- https://download.newrelic.com/548C16BF.gpg | sudo apt-key add - && \
+apt-get -y install newrelic-php5 
+RUN NR_INSTALL_SILENT=1 newrelic-install install && \
+sed -i -e "s/REPLACE_WITH_REAL_KEY/cd9571bdbcf2dc60bf4db62fe8f0b53ffc50NRAL/" \
+  -e "s/newrelic.appname[[:space:]]=[[:space:]].*/newrelic.appname=\"guessbook - php\"/" \
+  $(php -r "echo(PHP_CONFIG_FILE_SCAN_DIR);")/newrelic.ini
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY . .
